@@ -93,6 +93,17 @@ def log_message(message: types.Message) -> None:
 def handle_message(client: WhatsApp, msg: types.Message):
     """Main message handler"""
     try:
+        user = get_or_create_user(msg.from_user.wa_id, msg.from_user.name)
+        
+        # Check if user is banned
+        if user.is_banned:
+            admin_contact = getattr(Config, "BOT_ADMIN_PHONE", None)
+            admin_msg = f"❌ You are banned from using this bot."
+            if admin_contact:
+                admin_msg += f" Please contact the admin at {admin_contact} for more information."
+            msg.reply_text(admin_msg)
+            return
+
         log_message(msg)
         
         # Check if it's a command
@@ -107,8 +118,9 @@ def handle_message(client: WhatsApp, msg: types.Message):
             elif msg.type == types.MessageType.DOCUMENT:
                 handle_file_message(client, msg)
             else:
-                msg.reply_text("🤖 I received your message! Send me text to chat or use /help for commands.")
-                
+                msg.reply_text(
+                    f"🤖 I received your message! Send me text to chat or use {Config.BOT_PREFIX}help for commands."
+                )
     except Exception as e:
         logger.error(f"Error handling message: {e}")
         msg.reply_text("❌ Sorry, something went wrong. Please try again later.")
