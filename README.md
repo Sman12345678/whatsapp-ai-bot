@@ -268,11 +268,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Stats
 
-![GitHub stars](https://img.shields.io/github/stars/yourusername/whatsapp-ai-bot)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/whatsapp-ai-bot)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/whatsapp-ai-bot)
-![GitHub license](https://img.shields.io/github/license/yourusername/whatsapp-ai-bot)
+![GitHub stars](https://img.shields.io/github/stars/Sman12345678/whatsapp-ai-bot)
+![GitHub forks](https://img.shields.io/github/forks/Sman12345678/whatsapp-ai-bot)
+![GitHub issues](https://img.shields.io/github/issues/Sman12345678/whatsapp-ai-bot)
+![GitHub license](https://img.shields.io/github/license/Sman12345678/whatsapp-ai-bot)
 
 ---
 
-Made with ❤️ by [Your Name](https://github.com/yourusername)
+Made with ❤️ by [Suleiman](https://github.com/Sman12345678)
