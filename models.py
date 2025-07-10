@@ -9,6 +9,9 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
     is_banned = db.Column(db.Boolean, default=False)
+    banned_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    banned_at = db.Column(db.DateTime, nullable=True)
+    ban_reason = db.Column(db.String(256), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     
