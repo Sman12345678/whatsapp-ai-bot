@@ -26,9 +26,9 @@ def format_phone_number(phone: str) -> str:
     # Remove all non-digit characters
     digits_only = re.sub(r'[^\d]', '', phone)
     
-    # Add country code if missing (assuming +1 for US/Canada)
+    # Add country code if missing (assuming +234 for Nigeria)
     if len(digits_only) == 10:
-        digits_only = "1" + digits_only
+        digits_only = "234" + digits_only
     elif len(digits_only) == 11 and digits_only.startswith('1'):
         pass  # Already has country code
     
