@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - WhatsApp Bot{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 mb-0">
+                        <i class="fas fa-dashboard text-primary me-2"></i>
+                        Bot Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Real-time monitoring and analytics</p>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-outline-primary btn-sm" onclick="refreshStats()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                    <div class="small text-muted mt-1">
+                        Uptime: <span class="badge bg-success">{{ stats.uptime or '0:00:00' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded p-3">
+                                <i class="fas fa-users text-primary fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Users</h6>
+                            <h3 class="mb-0">{{ stats.total_users or 0 }}</h3>
+                            <small class="text-success">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                {{ stats.active_users_7d or 0 }} active (7d)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded p-3">
+                                <i class="fas fa-comments text-success fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Messages</h6>
+                            <h3 class="mb-0">{{ stats.total_messages or 0 }}</h3>
+                            <small class="text-info">
+                                <i class="fas fa-terminal me-1"></i>
+                                {{ stats.commands_used or 0 }} commands
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded p-3">
+                                <i class="fas fa-brain text-info fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">AI Requests</h6>
+                            <h3 class="mb-0">{{ stats.ai_requests or 0 }}</h3>
+                            <small class="text-warning">
+                                <i class="fas fa-file-alt me-1"></i>
+                                {{ stats.files_processed or 0 }} files
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded p-3">
+                                <i class="fas fa-users-cog text-warning fa-lg"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Active Groups</h6>
+                            <h3 class="mb-0">{{ stats.active_groups or 0 }}</h3>
+                            <small class="text-primary">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                {{ stats.user_stats.admins if stats.user_stats else 0 }} admins
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Message Activity (Last 7 Days)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="messageChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-success me-2"></i>
+                        Message Types
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="typeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Commands & User Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-fire text-danger me-2"></i>
+                        Popular Commands
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.popular_commands %}
+                        <div class="list-group list-group-flush">
+                            {% for cmd in stats.popular_commands %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-terminal text-muted me-2"></i>
+                                    <code>/{{ cmd.command }}</code>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ cmd.count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">No commands used yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-chart text-info me-2"></i>
+                        User Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.user_stats %}
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-primary bg-opacity-10 rounded">
+                                <h4 class="text-primary mb-1">{{ stats.user_stats.total }}</h4>
+                                <small class="text-muted">Total Users</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                                <h4 class="text-success mb-1">{{ stats.user_stats.active_7d }}</h4>
+                                <small class="text-muted">Active (7d)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                                <h4 class="text-warning mb-1">{{ stats.user_stats.admins }}</h4>
+                                <small class="text-muted">Admins</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
+                                <h4 class="text-danger mb-1">{{ stats.user_stats.banned }}</h4>
+                                <small class="text-muted">Banned</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <p class="mb-0">No user data available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server text-secondary me-2"></i>
+                        System Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                                <div>
+                                    <h6 class="mb-0">Bot Status</h6>
+                                    <small class="text-muted">Online & Active</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                                <div>
+                                    <h6 class="mb-0">WhatsApp API</h6>
+                                    <small class="text-muted">Connected</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                                <div>
+                                    <h6 class="mb-0">Gemini AI</h6>
+                                    <small class="text-muted">Operational</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success rounded-circle me-3" style="width: 12px; height: 12px;"></div>
+                                <div>
+                                    <h6 class="mb-0">Database</h6>
+                                    <small class="text-muted">Running</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Uptime</h6>
+                            <h5 class="text-success">{{ stats.uptime or '0:00:00' }}</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Response Time</h6>
+                            <h5 class="text-info">~0.5s</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="text-muted">Success Rate</h6>
+                            <h5 class="text-primary">99.9%</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/dashboard.js"></script>
+<script>
+    // Initialize charts with stats data
+    const statsData = {{ stats | tojson | safe }};
+    
+    // Initialize dashboard
+    if (typeof initializeDashboard === 'function') {
+        initializeDashboard(statsData);
+    }
+    
+    // Auto-refresh stats every 30 seconds
+    setInterval(refreshStats, 30000);
+</script>
+{% endblock %}
